@@ -49,7 +49,7 @@ def main():
 
                 if executable_path:
                     try:
-                        subprocess.run([executable_path, *args])
+                        subprocess.run([cmd, *args], executable=executable_path)
                     except Exception as e:
                         print(f"Failed to execute {cmd}: {e}")
                 else:
