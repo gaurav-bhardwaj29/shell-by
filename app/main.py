@@ -36,11 +36,11 @@ def main():
                 print(" ".join(args))
             case "type":
                 if len(args) == 1 and args[0] in {"echo", "exit", "type"}:
-                    print(f"${args[0]} is a shell builtin")
+                    print(f"{args[0]} is a shell builtin")
                 else:
                     location = find_in_path(args[0])
                     if location:
-                        print(f"${args[0]} is {location}")
+                        print(f"{args[0]} is {location}")
                     else:
                         print(f"{' '.join(args)} not found")
             case _:
