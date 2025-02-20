@@ -10,8 +10,8 @@ int main()
     char command_name[command_size];
     while(1)
     {
-        printf("$ ");
-        fflush(stdout);
+        //printf("$ ");
+        //fflush(stdout);
         if (fgets(buffer, buffer_size, stdin) == NULL)
         break;
         if (sscanf(buffer, "%99s", command_name)==1)
