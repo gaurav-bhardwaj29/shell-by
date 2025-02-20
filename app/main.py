@@ -1,18 +1,39 @@
 import sys
+import os
+def find_in_path(param):
+    path = os.environ['PATH']
+    print("Path: " + path)
+    print(f"Param: {param}")
+    for directory in path.split(":"):
+        for (dirpath, dirnames, filenames) in os.walk(directory):
+            if param in filenames:
+                return f"{dirpath}/{param}"
+    return None
 def main():
-    while 1:
+    while True:
         sys.stdout.write("$ ")
+        sys.stdout.flush()
+        # Wait for user input
         command = input()
-        match command:
-            case "exit 0":
-                return 0
-            case command if command.startswith("echo "):
-                sys.stdout.write(f"{command[len("echo "):]} \n")
-            case command if command.startswith("type invalid"):
-                sys.stdout.write(f"{command[len('type '):]}: not found\n")
-            case command if command.startswith("type "):
-                sys.stdout.write(f"{command[len("type: ")]}: is a shell builtin\n")
+        match command.split(" "):
+            case ["exit", "0"]:
+                exit(0)
+            case ["echo", *cmd]:
+                print(" ".join(cmd))
+            case ["type", *cmd]:
+                match cmd:
+                    case ["echo" | "exit" | "type"]:
+                        print(f"${cmd[0]} is a shell builtin")
+                    case _:
+                        location = find_in_path(cmd[0])
+                        if location:
+                            print(f"${cmd[0]} is {location}")
+                        else:
+                            print(f"${" ".join(cmd)} not found")
             case _:
-                sys.stdout.write(f"{command}: command not found\n")
+                if os.path.isfile(command.split(" ")[0]):
+                    os.system(command)
+                else:
+                    print(f"{command}: command not found")
 if __name__ == "__main__":
     main()
