@@ -14,7 +14,7 @@ def main():
             case "echo":
                 print(" ".join(args))
             case default:
-                sys.stdout.write(f"{Command}: command not found\n")
+                sys.stdout.write(f"{command}: command not found\n")
     
     return
      
