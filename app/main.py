@@ -9,7 +9,7 @@ def main():
             case command if command.startswith("echo "):
                 sys.stdout.write(f"{command[len("echo "):]} \n")
             case command if command.startswith("type invalid"):
-                sys.stdout.write(f"{command[len("type ":]}: not found\n")
+                sys.stdout.write(f"{command[len('type '):]}: not found\n")
             case command if command.startswith("type "):
                 sys.stdout.write(f"{command[len("type: "]}: is a shell builtin\n")
             case _:
