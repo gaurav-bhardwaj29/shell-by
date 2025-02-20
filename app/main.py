@@ -11,7 +11,7 @@ def main():
             case command if command.startswith("type invalid"):
                 sys.stdout.write(f"{command[len('type '):]}: not found\n")
             case command if command.startswith("type "):
-                sys.stdout.write(f"{command[len("type: "]}: is a shell builtin\n")
+                sys.stdout.write(f"{command[len("type: ")]}: is a shell builtin\n")
             case _:
                 sys.stdout.write(f"{command}: command not found\n")
 if __name__ == "__main__":
