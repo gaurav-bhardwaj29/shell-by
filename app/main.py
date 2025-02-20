@@ -13,8 +13,11 @@ def main():
                 break
             case "echo":
                 print(" ".join(args))
+            case "type":
+                if(command == "echo" or command == "exit" or command == "type")
+                sys.stdout.write(f"{command}: command is a builtin\n")
             case default:
-                sys.stdout.write(f"{command}: command not found\n")
+                sys.stdout.write(f"{command}: not found\n")
     
     return
      
