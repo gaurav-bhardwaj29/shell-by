@@ -48,14 +48,14 @@ def main():
             case "cd":
                 if not args:
                     continue
-                target = args[0]
-                
-                try:
-                    os.chdir(os.path.join(os.getcwd(), target))
-                except FileNotFoundError as e:
-                    print(f"cd: {target}: No such file or directory")
+                target = os.path.abspath(args[0])
+                if os.path.isdir(target):
+                    try:
+                        os.chdir(target)
+                    except Exception as e:
+                        print(f"cd: {args}: No such file or directory")
                 else:
-                    print(f"cd: {target}: No such file or directory")
+                    print(f"cd: {args}: No such file or directory")
                     
                 
             case _:
