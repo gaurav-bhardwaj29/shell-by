@@ -36,7 +36,7 @@ def main():
                 output = " ".join(args)
                 if output.count("'")>2:
                     output = output.replace("'", "")
-                elif output.startswith("'") and output.endswith("'")
+                elif output.startswith("'") and output.endswith("'"):
                     output = output[1:-1]
                 print(output)
             case "type":
