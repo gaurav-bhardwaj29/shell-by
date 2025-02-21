@@ -46,11 +46,17 @@ def main():
             case "pwd":
                 print(f"{os.getcwd()}")
             case "cd":
-                location = find_in_path(args[0])
-                if location:
-                    os.chdir(args[0])
+                if not args:
+                    continue
+                target = args[0]
+                if os.path.isdir(target):
+                    try:
+                        os.chdir(target)
+                    except Exception as e:
+                        print(f"cd: {target} No such file or directory")
                 else:
-                    print(f"{' '.join(args)}: No such file or directory")
+                    print(f"cd: {target} No such file or directory")
+                    
                 
             case _:
                 # Check if cmd is a path to a file or look it up in PATH
