@@ -33,9 +33,12 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
-                print(" ".join(args))
+                output = " ".join(args)
+                if output.startswith("'") and ouptut.endswith("'"):
+                    output = output[1:-1]
+                print(output)
             case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
+                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
                     print(f"{args[0]} is a shell builtin")
                 else:
                     location = find_in_path(args[0])
@@ -56,8 +59,24 @@ def main():
                         print(f"cd: {args[0]}: No such file or directory")
                 else:
                     print(f"cd: {args[0]}: No such file or directory")
-                    
-                
+            case "cat":
+                if not args:
+                    continue
+                try:
+                    contents = []
+                    for arg in args:
+                        file = arg[1:-1] if arg.startswith("'") and arg.endswith("'")
+                        if os.path.isfile(file):
+                            with open(file, 'r') as f:
+                                contents.append(f.read().strip())
+                        else:
+                            print(f"cat: {arg}: No such file or directory)
+                            break
+                    else:
+                        print(" ".join(contents))
+                except Exception as e:
+                    print(f"cat: Error reading files: {e}")
+            
             case _:
                 # Check if cmd is a path to a file or look it up in PATH
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
