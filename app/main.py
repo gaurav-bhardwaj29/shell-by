@@ -35,7 +35,7 @@ def main():
             case "echo":
                 print(" ".join(args))
             case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd"}:
+                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
                     print(f"{args[0]} is a shell builtin")
                 else:
                     location = find_in_path(args[0])
@@ -45,6 +45,12 @@ def main():
                         print(f"{' '.join(args)} not found")
             case "pwd":
                 print(f"{os.getcwd()}")
+            case "cd":
+                if location = find_in_path(args[0])
+                    os.chdir(args[0])
+                else:
+                    print(f"{' '.join(args)}: No such file or directory")
+                
             case _:
                 # Check if cmd is a path to a file or look it up in PATH
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
