@@ -33,19 +33,22 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
+                if args.startswith["'"] and args.endswith["'"]
+                    print(args[6:-1])
+                else:
                 # Process each argument separately, preserving spaces within quotes
-                result = ""
-                i = 0
-                while i < len(args):
-                    arg = args[i]
-                    if arg.startswith("'") and arg.endswith("'"):
-                        # Remove quotes and preserve internal content
-                        result += arg[1:-1]
-                    else:
-                        # Handle case where quotes might be adjacent
-                        result += arg.strip("'")
-                    i += 1
-                print(result)
+                    result = ""
+                    i = 0
+                    while i < len(args):
+                        arg = args[i]
+                        if arg.startswith("'") and arg.endswith("'"):
+                            # Remove quotes and preserve internal content
+                            result += arg[1:-1]
+                        else:
+                            # Handle case where quotes might be adjacent
+                            result += arg.strip("'")
+                        i += 1
+                    print(result)
             case "type":
                 if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
                     print(f"{args[0]} is a shell builtin")
