@@ -70,7 +70,7 @@ def main():
                             with open(file, 'r') as f:
                                 contents.append(f.read().strip())
                         else:
-                            print(f"cat: {arg}: No such file or directory)
+                            print(f"cat: {arg}: No such file or directory")
                             break
                     else:
                         print(" ".join(contents))
