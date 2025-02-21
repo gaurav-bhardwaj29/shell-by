@@ -34,7 +34,9 @@ def main():
                     exit(0)
             case "echo":
                 output = " ".join(args)
-                if output.startswith("'") and output.endswith("'"):
+                if output.count("'")>2:
+                    output = output.replace("'", "")
+                elif output.startswith("'") and output.endswith("'")
                     output = output[1:-1]
                 print(output)
             case "type":
