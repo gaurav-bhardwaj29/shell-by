@@ -53,9 +53,9 @@ def main():
                     try:
                         os.chdir(target)
                     except Exception as e:
-                        print(f"cd: {target} No such file or directory")
+                        print(f"cd: {target}: No such file or directory")
                 else:
-                    print(f"cd: {target} No such file or directory")
+                    print(f"cd: {target}: No such file or directory")
                     
                 
             case _:
