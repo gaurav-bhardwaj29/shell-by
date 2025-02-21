@@ -51,7 +51,7 @@ def main():
                 target = args[0]
                 if os.path.isdir(target):
                     try:
-                        os.chdir(target)
+                        os.chdir(os.path.join(current_dir, target))
                     except Exception as e:
                         print(f"cd: {target}: No such file or directory")
                 else:
