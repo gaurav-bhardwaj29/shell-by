@@ -65,7 +65,7 @@ def main():
                 try:
                     contents = []
                     for arg in args:
-                        file = arg[1:-1] if arg.startswith("'") and arg.endswith("'")
+                        file = arg[1:-1] if arg.startswith("'") and arg.endswith("'") else arg
                         if os.path.isfile(file):
                             with open(file, 'r') as f:
                                 contents.append(f.read().strip())
