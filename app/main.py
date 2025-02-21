@@ -43,6 +43,8 @@ def main():
                         print(f"{args[0]} is {location}")
                     else:
                         print(f"{' '.join(args)} not found")
+            case "pwd":
+                print(f"{os.getcwd()}")
             case _:
                 # Check if cmd is a path to a file or look it up in PATH
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
