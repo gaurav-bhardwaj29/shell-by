@@ -33,7 +33,7 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
-                if args.startswith["'"] and args.endswith["'"]
+                if args.startswith("'") and args.endswith("'"):
                     print(args[6:-1])
                 else:
                 # Process each argument separately, preserving spaces within quotes
