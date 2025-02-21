@@ -49,11 +49,11 @@ def main():
                 if not args:
                     continue
                 target = args[0]
-                if os.path.isdir(target):
-                    try:
-                        os.chdir(os.path.join(current_dir, target))
-                    except Exception as e:
-                        print(f"cd: {target}: No such file or directory")
+                
+                try:
+                    os.chdir(os.path.join(current_dir, target))
+                except Exception as e:
+                    print(f"cd: {target}: No such file or directory")
                 else:
                     print(f"cd: {target}: No such file or directory")
                     
