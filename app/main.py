@@ -48,7 +48,7 @@ def main():
             case "cd":
                 if not args:
                     continue
-                target = os.path.abspath(args[0])
+                target = os.path.abspath(os.path.expanduser(args[0]))
                 if os.path.isdir(target):
                     try:
                         os.chdir(target)
