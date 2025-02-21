@@ -46,7 +46,8 @@ def main():
             case "pwd":
                 print(f"{os.getcwd()}")
             case "cd":
-                if location = find_in_path(args[0])
+                location = find_in_path(args[0])
+                if location:
                     os.chdir(args[0])
                 else:
                     print(f"{' '.join(args)}: No such file or directory")
