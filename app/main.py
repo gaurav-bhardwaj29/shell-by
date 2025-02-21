@@ -35,7 +35,7 @@ def main():
             case "echo":
                 print(" ".join(args))
             case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type"}:
+                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd"}:
                     print(f"{args[0]} is a shell builtin")
                 else:
                     location = find_in_path(args[0])
