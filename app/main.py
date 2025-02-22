@@ -23,7 +23,11 @@ def completer(text, state):
         tab_press_count=0
         last_text=text
     matches = get_executables(text)
-    if state == 0:
+    if not matches:
+        return None
+        
+    if tab_press_count==0:
+        
         if len(matches)>1:
             tab_press_count+=1
             sys.stdout.write("\a")
@@ -31,7 +35,7 @@ def completer(text, state):
             return None
         elif len(matches) == 1:
             return matches[0] + " "
-    if state == 1 and tab_press_count == 1:
+    elif state == 0 and tab_press_count == 1:
         if len(matches)>1:
             print("\n"+" ".join(matches))
             sys.stdout.write(f"\n$ {text}")
