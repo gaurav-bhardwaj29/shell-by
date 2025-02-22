@@ -36,7 +36,7 @@ def complete(text, state):
 
 def main():
     readline.set_completer(complete)
-    readdline.parse_and_bind("tab: complete")
+    readline.parse_and_bind("tab: complete")
     
     while True:
         sys.stdout.write("$ ")
