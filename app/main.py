@@ -33,13 +33,22 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
-                text = ""
-                for arg in args:
-                    if arg.startswith("'") and arg.endswith("'"):
-                        text+=arg[1:-1]
+                t# Use the original command string minus "echo" to preserve spaces
+                raw_input = command[len("echo"):].strip()
+                # Remove quotes while preserving spaces between quoted strings
+                result = ""
+                i = 0
+                while i < len(raw_input):
+                    if raw_input[i] == "'":
+                        i += 1  # Skip opening quote
+                        while i < len(raw_input) and raw_input[i] != "'":
+                            result += raw_input[i]
+                            i += 1
+                        i += 1  # Skip closing quote
                     else:
-                        text+=arg.strip("'")
-                print(text)
+                        result += raw_input[i]
+                        i += 1
+                print(result)
             case "type":
                 if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
                     print(f"{args[0]} is a shell builtin")
