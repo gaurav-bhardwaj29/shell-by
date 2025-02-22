@@ -5,8 +5,8 @@ import subprocess
 import readline
 
 def completer(text, state):
-    builtin = ["echo", "exit", "pwd", "cd", "type"]
-    matches = [cmd for cmd in builtin if cmd.startswith(text)]
+    builtins = ["echo ", "exit "]
+    matches = [cmd for cmd in builtins if cmd.startswith(text)]
     return matches[state] if state<len(matches) else None
 
 def main():
