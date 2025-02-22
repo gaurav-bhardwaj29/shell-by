@@ -8,14 +8,14 @@ import readline
 tab_press_count=0
 last_text=""
 def get_executables(prefix):
-    matches=[]
+    matches=set()
     # custom executables autocompletion
     for path in os.environ["PATH"].split(os.pathsep):
         if os.path.isdir(path):
             for file in os.listdir(path):
                 full_path=os.path.join(path, file)
                 if file.startswith(prefix) and os.access(full_path, os.X_OK):
-                    matches.append(file)
+                    matches.add(file)
     return sorted(matches)
 def completer(text, state):
     global tab_press_count, last_text
