@@ -40,6 +40,7 @@ def main():
             continue
 
         redir_stdout = None
+        redir_stdout_append = None
         redir_stderr = None
         command_tokens = []
         i = 0
