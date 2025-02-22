@@ -109,7 +109,7 @@ def main():
                             print(f"cat: {arg}: Error reading file: {e}", file=sys.stderr)
                     else:
                         print(f"cat: {arg}: No such file or directory", file=sys.stderr)
-                result = " ".join(contents)
+                result = "".join(contents)
                 output_result(result)
             case _:
                 # For non-builtins, check if cmd is a file or in PATH.
