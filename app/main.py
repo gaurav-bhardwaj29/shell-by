@@ -12,7 +12,7 @@ def completer(text, state):
         if os.path.isdir(path):
             for file in os.listdir(path):
                 if file.startswith(text) and os.access(os.path.join(path, file), os.X_OK):
-                    matches.append(file)
+                    matches.append(file+ " ")
 
     return matches[state] if state < len(matches) else None
 
