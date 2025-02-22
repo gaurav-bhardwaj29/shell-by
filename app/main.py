@@ -37,10 +37,10 @@ def completer(text, state):
             return matches[0] + " "
     elif state == 0 and tab_press_count == 1:
         if len(matches)>1:
-            print("\n"+"  ".join(matches))
-            sys.stdout.write(f"\n$ {text}")
-            readline.redisplay()
+            print("\n"+"  ".join(matches)+"\n")
+            sys.stdout.write(f"$ {text}")
             sys.stdout.flush()
+            readline.redisplay()
             tab_press_count=0
             return None
     return matches[state]+ " " if state<len(matches) else None
