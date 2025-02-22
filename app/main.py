@@ -16,7 +16,42 @@ def find_in_path(param):
         if os.path.isfile(executable_path) and os.access(executable_path, os.X_OK):
             return executable_path
     return None
+def output_result(result):
+    if redir_stdout_append:
+        try:
+            parent_dir(redir_stdout_append)
+            with open(redir_stdout_append, "a") as f:
+                f.write(result+"\n")
+        except Exception as e:
+            print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
 
+    elif redir_stdout:
+        try:
+            parent_dir(redir_stdout)
+            with open(redir_stdout, "w") as f:
+                f.write(result+"\n")
+        except Exception as e:
+            print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
+    else:
+        print(result)
+
+def output_error(message):
+    if redir_stderr_append:
+        try:
+            parent_dir(redir_stderr_append)
+            with open(redir_stderr_append, "a") as f:
+                f.write(message + "\n")
+        except Exception as e:
+            print(f"Error appending to {redir_stderr_append}: {e}", file=sys.stderr)
+    elif redir_stderr:
+        try:
+            parent_dir(redir_stderr)
+            with open(redir_stderr, "w") as f:
+                f.write(message + "\n")
+        except Exception as e:
+            print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
+    else:
+        print(message, file=sys.stderr)
 def main():
     while True:
         sys.stdout.write("$ ")
@@ -90,42 +125,7 @@ def main():
             continue
 
         cmd, *args = command_tokens
-        def output_result(result):
-            if redir_stdout_append:
-                try:
-                    parent_dir(redir_stdout_append)
-                    with open(redir_stdout_append, "a") as f:
-                        f.write(result+"\n")
-                except Exception as e:
-                    print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
 
-            elif redir_stdout:
-                try:
-                    parent_dir(redir_stdout)
-                    with open(redir_stdout, "w") as f:
-                        f.write(result+"\n")
-                except Exception as e:
-                    print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
-            else:
-                print(result)
-
-        def output_error(message):
-            if redir_stderr_append:
-                try:
-                    parent_dir(redir_stderr_append)
-                    with open(redir_stderr_append, "a") as f:
-                        f.write(message + "\n")
-                except Exception as e:
-                    print(f"Error appending to {redir_stderr_append}: {e}", file=sys.stderr)
-            elif redir_stderr:
-                try:
-                    parent_dir(redir_stderr)
-                    with open(redir_stderr, "w") as f:
-                        f.write(message + "\n")
-                except Exception as e:
-                    print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
-            else:
-                print(message, file=sys.stderr)
         match cmd:
             case "exit":
                 if args == ["0"]:
