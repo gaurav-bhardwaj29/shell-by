@@ -248,7 +248,7 @@ def main():
                                     if result.stderr:
                                         f.write(result.stderr)
                             elif result.stderr:
-                                sys.stderr.write(result.stderr.rstrip("\n") + "\n")
+                                sys.stderr.write(result.stderr.rstrip("\n"))
                                 sys.stderr.flush()
                         except Exception as e:
                             output_error(f"Failed to handle output redirection: {e}")
