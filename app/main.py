@@ -19,6 +19,8 @@ def find_in_path(param):
 
 def main():
     while True:
+        sys.stdout.write("$ ")
+        sys.stdout.flush()
         try:
             command = input().strip()
         except EOFError:
