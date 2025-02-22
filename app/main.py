@@ -72,12 +72,12 @@ def main():
                         file = arg
                         if os.path.isfile(file):
                             with open(file, 'r') as f:
-                                contents.append(f.read())
+                                contents.append(f.read().strip())
                         else:
                             print(f"cat: {arg}: No such file or directory")
                             break
                     else:
-                        print(" ".join(contents))
+                        print("".join(contents))
                 except Exception as e:
                     print(f"cat: Error reading files: {e}")
             
