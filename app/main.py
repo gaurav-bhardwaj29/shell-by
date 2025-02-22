@@ -111,7 +111,7 @@ def main():
             elif command == "cd":
                 directory = args[1] if len(args)>1 else HOME
                 
-                if directory == '~':
+                if directory == "~":
                     directory = HOME
                 try:
                     os.chdir(directory)
