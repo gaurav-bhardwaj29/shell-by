@@ -33,7 +33,7 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
-                t# Use the original command string minus "echo" to preserve spaces
+                # Use the original command string minus "echo" to preserve spaces
                 raw_input = command[len("echo"):].strip()
                 # Remove quotes while preserving spaces between quoted strings
                 result = ""
