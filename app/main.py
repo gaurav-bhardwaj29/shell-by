@@ -20,6 +20,18 @@ def get_executables(prefix):
                 if file.startswith(prefix) and os.access(full_path, os.X_OK):
                     matches.add(file)
     return sorted(matches)
+
+
+def longest_common_prefix(strs):
+    if not strs:
+        return ""
+    shortest = min(strs, key=len)
+    for i, char in enumerate(shortest):
+        for other in strs:
+            if other[i]!=char:
+                return shortest[:i]
+    return shortest
+
 def completer(text, state):
     global tab_press_count, last_text
     if text != last_text:
@@ -32,6 +44,11 @@ def completer(text, state):
     if tab_press_count==0:
         
         if len(matches)>1:
+            lcp = longest_common_prefix(matches)
+            if lcp!=text:
+                readline.insert_text(lcp[len(text):])
+                readline.redisplay()
+                last_text = lcp
             tab_press_count+=1
             sys.stdout.write("\a")
             sys.stdout.flush()
