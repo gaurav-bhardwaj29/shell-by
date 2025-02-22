@@ -136,11 +136,11 @@ def main():
                             cmd_path = full_path
                             break
                     if new_command in builtin:
-                        sys.stdout.write(f"{new command} is a shell builtin\n")
+                        sys.stdout.write(f"{new_command} is a shell builtin\n")
                     elif cmd_path:
-                        sys.stdout.write(f"{new command} is {cmd_path}\n")
+                        sys.stdout.write(f"{new_command} is {cmd_path}\n")
                     else:
-                        sys.stderr.write(f"{new command}: not found\n")
+                        sys.stderr.write(f"{new_command}: not found\n")
                 sys.stdout.flush()
             
             # Handle external commands
