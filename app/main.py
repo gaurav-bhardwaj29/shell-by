@@ -123,7 +123,7 @@ def main():
                     sys.stderr.write(f"cd: {directory}: {std(e)}\n")
                 sys.stdout.flush()
                 
-            elif command = "type":
+            elif command == "type":
                 if len(args) <2:
                     sys.stderr.write("type: missing argument\n")
                 else:
