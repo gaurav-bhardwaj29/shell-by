@@ -4,17 +4,39 @@ import shlex
 import subprocess
 import readline
 
-def completer(text, state):
-    builtins = ["echo ", "exit "]
-    matches = [cmd for cmd in builtins if cmd.startswith(text)]
+def get_executables(prefix):
+    matches=[]
     # custom executables autocompletion
     for path in os.environ["PATH"].split(os.pathsep):
         if os.path.isdir(path):
             for file in os.listdir(path):
-                if file.startswith(text) and os.access(os.path.join(path, file), os.X_OK):
-                    matches.append(file+ " ")
+                full_path=os.path.join(path, file)
+                if file.startswith(prefix) and os.access(full_path, os.X_OK):
+                    matches.append(file)
 
-    return matches[state] if state < len(matches) else None
+    return sorted(matches)
+def completer(text, state):
+    global tab_press_count, last_text
+    if text != last_text:
+        tab_press_count=0
+        last_text=text
+    matches = get_executables(text)
+    if state == 0:
+        if len(matches)>1:
+            tab_press_count+=1
+            sys.stdout.write("\a")
+            sys.stdout.flush()
+            return None
+        elif len(matches) == 1:
+            return matches[0] + " "
+    if state == 1 and tab_press_count == 1:
+        if len(matches)>1:
+            print("\n"+" ".join(matches))
+            sys.stdout.write(f"$ {text}")
+            sys.stdout.flush()
+            tab_press_count=0
+            return None
+        return matches[state]+ " " if state<len(matches) else None
 
 def main():
     builtin = ["echo", "exit", "pwd", "cd", "type"]
