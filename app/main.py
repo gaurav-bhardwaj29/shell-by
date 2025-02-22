@@ -34,7 +34,7 @@ def main():
                     exit(0)
             case "echo":
                 # Process arguments, preserving spaces in quoted strings
-                print(f"Debug args: {args}")
+                # print(f"Debug args: {args}")
                 result = []
                 for arg in args:
                     if arg.startswith("'") and arg.endswith("'"):
