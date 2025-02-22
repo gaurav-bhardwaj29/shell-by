@@ -70,7 +70,7 @@ def main():
                 result = " ".join(args)
                 output_result(result)
             case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
+                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
                     result = f"{args[0]} is a shell builtin"
                     output_result(result)
                 else:
