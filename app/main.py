@@ -84,12 +84,15 @@ def main():
         cmd, *args = command_tokens
         def output_result(result):
             if redir_stdout_append:
-                try:
-                    parent_dir(redir_stdout_append)
-                    with open(redir_stdout_append, "a") as f:
-                        f.write(result)
-                except Exception as e:
-                    print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
+                if os.path.exists(redir_stdout_append):
+                    print (result)
+                else
+                    try:
+                        parent_dir(redir_stdout_append)
+                        with open(redir_stdout_append, "a") as f:
+                            f.write(result)
+                    except Exception as e:
+                        print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
 
             elif redir_stdout:
                 try:
