@@ -6,7 +6,7 @@ import readline
 
 def completer(text, state):
     builtins = ["echo ", "exit "]
-    matches = [cmd + " " for cmd in builtins if cmd.startswith(text)]
+    matches = [cmd for cmd in builtins if cmd.startswith(text)]
     # custom executables autocompletion
     for path in os.environ["PATH"].split(os.pathsep):
         if os.path.isdir(path):
