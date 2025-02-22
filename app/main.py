@@ -42,6 +42,7 @@ def main():
         redir_stdout = None
         redir_stdout_append = None
         redir_stderr = None
+        redir_stderr_append = None
         command_tokens = []
         i = 0
         while i < len(parts):
@@ -67,15 +68,23 @@ def main():
                 redir_stderr = parts[i+1]
                 i += 2
                 continue
+            elif token == "2>>":
+                if i + 1 >= len(parts):
+                    print("Redirection operator without target file", file=sys.stderr)
+                    break
+                redir_stderr_append = parts[i+1]
+                i += 2
+                continue
             else:
                 command_tokens.append(token)
                 i += 1
 
         if not command_tokens:
-            if redir_stderr:
+            if redir_stderr or redir_stderr_append:
+                target = redir_stderr if redir_stderr else redir_stderr_append
                 try:
-                    parent_dir(redir_stderr)
-                    with open(redir_stderr, "w") as f:
+                    parent_dir(target)
+                    with open(target, "w") as f:
                         f.write("")
                 except Exception as e:
                     print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
@@ -170,7 +179,10 @@ def main():
                         elif redir_stdout:
                             parent_dir(redir_stdout)
                             stdout_file = open(redir_stdout, "w")
-                        if redir_stderr:
+                        if redir_stderr_append:
+                            parent_dir(redir_stderr_append)
+                            stderr_file = open(redir_stderr_append, "a")
+                        elif redir_stderr:
                             parent_dir(redir_stderr)
                             stderr_file = open(redir_stderr, "w")
                         subprocess.run([cmd, *args], executable=executable_path, stdout=stdout_file, stderr=stderr_file)
@@ -183,13 +195,15 @@ def main():
                             stderr_file.close()
                 else:
                     output_error(f"{cmd}: command not found")
-        if redir_stderr and not os.path.exists(redir_stderr):
+        if (redir_stderr or redir_stderr_append) and not os.path.exists(redir_stderr or redir_stderr_append):
+            target = redir_stderr if redir_stderr else redir_stderr_append
             try:
-                parent_dir(redir_stderr)
-                with open(redir_stderr, "w") as f:
+                parent_dir(target)
+                with open(target, "w") as f:
                     f.write("")
             except Exception as e:
-                print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
+                print(f"Error creating {target}: {e}", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()
