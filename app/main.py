@@ -126,8 +126,6 @@ def main():
                     print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
             else:
                 print(message, file=sys.stderr)
-            # sys.stdout.write("$ ")
-            # sys.stdout.flush()
         match cmd:
             case "exit":
                 if args == ["0"]:
@@ -192,6 +190,7 @@ def main():
                         elif redir_stderr:
                             parent_dir(redir_stderr)
                             stderr_file = open(redir_stderr, "w")
+
                         subprocess.run([cmd, *args], executable=executable_path, stdout=stdout_file, stderr=stderr_file)
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
