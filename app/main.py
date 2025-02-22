@@ -176,7 +176,6 @@ def main():
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
                 if executable_path:
                     try:
-                        # Capture output instead of passing file objects
                         result = subprocess.run(
                             [cmd, *args],
                             executable=executable_path,
@@ -184,45 +183,47 @@ def main():
                             stderr=subprocess.PIPE if redir_stderr or redir_stderr_append else None,
                             text=True
                         )
-                        # Handle stdout redirection
-                        if redir_stdout_append:
-                            parent_dir(redir_stdout_append)
-                            with open(redir_stdout_append, "a") as f:
-                                if result.stdout:
+                        try:
+                            # Handle stdout redirection
+                            if redir_stdout_append:
+                                parent_dir(redir_stdout_append)
+                                with open(redir_stdout_append, "a") as f:
+                                    if result.stdout:
+                                        f.write(result.stdout)
+                            elif redir_stdout and result.stdout:
+                                parent_dir(redir_stdout)
+                                with open(redir_stdout, "w") as f:
                                     f.write(result.stdout)
-                        elif redir_stdout and result.stdout:
-                            parent_dir(redir_stdout)
-                            with open(redir_stdout, "w") as f:
-                                f.write(result.stdout)
-                        elif result.stdout:
-                            sys.stdout.write(result.stdout)
-                            sys.stdout.flush()
+                            elif result.stdout:
+                                sys.stdout.write(result.stdout)
+                                sys.stdout.flush()
 
-                        # Handle stderr redirection
-                        if redir_stderr_append:
-                            parent_dir(redir_stderr_append)
-                            with open(redir_stderr_append, "a") as f:
-                                if result.stderr:
+                            # Handle stderr redirection
+                            if redir_stderr_append:
+                                parent_dir(redir_stderr_append)
+                                with open(redir_stderr_append, "a") as f:
+                                    if result.stderr:
+                                        f.write(result.stderr)
+                            elif redir_stderr and result.stderr:
+                                parent_dir(redir_stderr)
+                                with open(redir_stderr, "w") as f:
                                     f.write(result.stderr)
-                        elif redir_stderr and result.stderr:
-                            parent_dir(redir_stderr)
-                            with open(redir_stderr, "w") as f:
-                                f.write(result.stderr)
-                        elif result.stderr:
-                            sys.stderr.write(result.stderr)
-                            sys.stderr.flush()
-
+                            elif result.stderr:
+                                sys.stderr.write(result.stderr)
+                                sys.stderr.flush()
+                        except Exception as e:
+                            output_error(f"Failed to handle output redirection: {e}")
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
                 else:
                     output_error(f"{cmd}: command not found")
-        if redir_stderr and not os.path.exists(redir_stderr):
-            try:
-                parent_dir(redir_stderr)
-                with open(redir_stderr, "w") as f:
-                    f.write("")
-            except Exception as e:
-                print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
+                    if redir_stderr and not os.path.exists(redir_stderr):
+                        try:
+                            parent_dir(redir_stderr)
+                            with open(redir_stderr, "w") as f:
+                                f.write("")
+                        except Exception as e:
+                            print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
         elif redir_stderr_append and not os.path.exists(redir_stderr_append):
             try:
                 parent_dir(redir_stderr_append)
