@@ -222,36 +222,35 @@ def main():
                             stderr=subprocess.PIPE if redir_stderr or redir_stderr_append else None,
                             text=True
                         )
-                        try:
-                            if redir_stdout_append:
-                                parent_dir(redir_stdout_append)
-                                with open(redir_stdout_append, "a") as f:
-                                    if result.stdout:
-                                        f.write(result.stdout)
-                            elif redir_stdout:
-                                parent_dir(redir_stdout)
-                                with open(redir_stdout, "w") as f:
-                                    if result.stdout:
-                                        f.write(result.stdout)
-                            elif result.stdout:
-                                sys.stdout.write(result.stdout)
-                                sys.stdout.flush()
+                        if redir_stdout_append:
+                            parent_dir(redir_stdout_append)
+                            with open(redir_stdout_append, "a") as f:
+                                if result.stdout:
+                                    f.write(result.stdout)
+                        elif redir_stdout:
+                            parent_dir(redir_stdout)
+                            with open(redir_stdout, "w") as f:
+                                if result.stdout:
+                                    f.write(result.stdout)
+                        elif result.stdout:
+                            sys.stdout.write(result.stdout)
+                            sys.stdout.flush()
 
-                            if redir_stderr_append:
-                                parent_dir(redir_stderr_append)
-                                with open(redir_stderr_append, "a") as f:
-                                    if result.stderr:
-                                        f.write(result.stderr)
-                            elif redir_stderr:
-                                parent_dir(redir_stderr)
-                                with open(redir_stderr, "w") as f:
-                                    if result.stderr:
-                                        f.write(result.stderr)
-                            elif result.stderr:
-                                sys.stderr.write(result.stderr.rstrip("\n"))
-                                sys.stderr.flush()
-                        except Exception as e:
-                            output_error(f"Failed to handle output redirection: {e}")
+                        if redir_stderr_append:
+                            parent_dir(redir_stderr_append)
+                            with open(redir_stderr_append, "a") as f:
+                                if result.stderr:
+                                    f.write(result.stderr)
+                        elif redir_stderr:
+                            parent_dir(redir_stderr)
+                            with open(redir_stderr, "w") as f:
+                                if result.stderr:
+                                    f.write(result.stderr)
+                        elif result.stderr:
+                            sys.stderr.write(result.stderr.rstrip("\n") + "\n")
+                            sys.stderr.flush()
+                            sys.stdout.write("\n")
+                            sys.stdout.flush()
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
                 else:
