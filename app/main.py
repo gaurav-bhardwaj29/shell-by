@@ -4,11 +4,14 @@ import shlex
 import subprocess
 import readline
 
-
+builtin = ["echo", "exit", "pwd", "cd", "type"]
 tab_press_count=0
 last_text=""
 def get_executables(prefix):
     matches=set()
+    for cmd in builtin:
+        if cmd.startswith(prefix):
+            matches.add(cmd)
     # custom executables autocompletion
     for path in os.environ["PATH"].split(os.pathsep):
         if os.path.isdir(path):
@@ -48,7 +51,6 @@ def completer(text, state):
     return matches[state]+ " " if state<len(matches) else None
 
 def main():
-    builtin = ["echo", "exit", "pwd", "cd", "type"]
     PATH = os.environ.get('PATH')
     HOME = os.environ.get('HOME')
     
