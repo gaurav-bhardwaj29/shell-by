@@ -222,8 +222,7 @@ def main():
                 else:
                     sys.stderr.write(f"{command}: command not found\n")
                 sys.stdout.flush()
-            readline.set_pre_input_hook(lambda=readline.insert_text(""))
-                
+            readline.set_pre_input_hook(lambda: readline.insert_text(""))
         except EOFError:
             sys.stdout.write("\n")
             break
