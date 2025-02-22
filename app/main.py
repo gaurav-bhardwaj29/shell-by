@@ -1,7 +1,7 @@
 import sys
 import os
 import subprocess
-import shlex  # for proper parsing of quoted strings
+import shlex
 
 def find_in_path(param):
     path = os.environ['PATH']
@@ -25,64 +25,61 @@ def main():
             continue
 
         try:
-            # Use shlex.split to properly handle quotes and spaces
             parts = shlex.split(command)
         except Exception as e:
-            print(f"Error parsing command: {e}")
+            print(f"Error parsing command: {e}", file=sys.stderr)
             continue
 
         if not parts:
             continue
 
-        # Parse for redirection tokens for stdout and stderr
         redir_stdout = None
         redir_stderr = None
+        command_tokens = []
         i = 0
         while i < len(parts):
-            if parts[i] in (">", "1>"):
+            token = parts[i]
+            if token in (">", "1>"):
                 if i + 1 >= len(parts):
                     print("Redirection operator without target file", file=sys.stderr)
-                    parts = parts[:i]
                     break
                 redir_stdout = parts[i+1]
-                del parts[i:i+2]
+                i += 2
                 continue
-            elif parts[i] == "2>":
+            elif token == "2>":
                 if i + 1 >= len(parts):
                     print("Redirection operator without target file", file=sys.stderr)
-                    parts = parts[:i]
                     break
                 redir_stderr = parts[i+1]
-                del parts[i:i+2]
+                i += 2
                 continue
-            i += 1
+            else:
+                command_tokens.append(token)
+                i += 1
 
-        if not parts:
+        if not command_tokens:
             continue
 
-        cmd, *args = parts
-
-        # Helper functions for output redirection
+        cmd, *args = command_tokens
         def output_result(result):
             if redir_stdout:
                 try:
                     with open(redir_stdout, "w") as f:
                         f.write(result)
                 except Exception as e:
-                    output_error(f"Error writing to {redir_stdout}: {e}")
+                    print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
             else:
                 print(result)
 
-        def output_error(msg):
+        def output_error(message):
             if redir_stderr:
                 try:
-                    # Open in append mode so that multiple errors are written together
-                    with open(redir_stderr, "a") as f:
-                        f.write(msg + "\n")
+                    with open(redir_stderr, "w") as f:
+                        f.write(message)
                 except Exception as e:
                     print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
             else:
-                print(msg, file=sys.stderr)
+                print(message, file=sys.stderr)
 
         match cmd:
             case "exit":
@@ -121,7 +118,6 @@ def main():
                     continue
                 contents = []
                 for arg in args:
-                    # With shlex.split, quotes are already removed.
                     if os.path.isfile(arg):
                         try:
                             with open(arg, 'r') as f:
@@ -130,23 +126,25 @@ def main():
                             output_error(f"cat: {arg}: Error reading file: {e}")
                     else:
                         output_error(f"cat: {arg}: No such file or directory")
-                result = " ".join(contents)
-                output_result(result)
+                output_result("".join(contents))
             case _:
-                # External command: check if cmd is a file or look it up in PATH.
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
                 if executable_path:
+                    stdout_file = None
+                    stderr_file = None
                     try:
-                        out_f = open(redir_stdout, "w") if redir_stdout else None
-                        err_f = open(redir_stderr, "w") if redir_stderr else None
-                        subprocess.run([cmd, *args], executable=executable_path, stdout=out_f, stderr=err_f)
+                        if redir_stdout:
+                            stdout_file = open(redir_stdout, "w")
+                        if redir_stderr:
+                            stderr_file = open(redir_stderr, "w")
+                        subprocess.run([cmd, *args], executable=executable_path, stdout=stdout_file, stderr=stderr_file)
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
                     finally:
-                        if out_f:
-                            out_f.close()
-                        if err_f:
-                            err_f.close()
+                        if stdout_file is not None:
+                            stdout_file.close()
+                        if stderr_file is not None:
+                            stderr_file.close()
                 else:
                     output_error(f"{cmd}: command not found")
 
