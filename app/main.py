@@ -184,12 +184,12 @@ def main():
                             stderr=subprocess.PIPE if redir_stderr or redir_stderr_append else None,
                             text=True
                         )
-
                         # Handle stdout redirection
-                        if redir_stdout_append and result.stdout:
+                        if redir_stdout_append:
                             parent_dir(redir_stdout_append)
                             with open(redir_stdout_append, "a") as f:
-                                f.write(result.stdout)
+                                if result.stdout:
+                                    f.write(result.stdout)
                         elif redir_stdout and result.stdout:
                             parent_dir(redir_stdout)
                             with open(redir_stdout, "w") as f:
@@ -199,10 +199,11 @@ def main():
                             sys.stdout.flush()
 
                         # Handle stderr redirection
-                        if redir_stderr_append and result.stderr:
+                        if redir_stderr_append:
                             parent_dir(redir_stderr_append)
                             with open(redir_stderr_append, "a") as f:
-                                f.write(result.stderr)
+                                if result.stderr:
+                                    f.write(result.stderr)
                         elif redir_stderr and result.stderr:
                             parent_dir(redir_stderr)
                             with open(redir_stderr, "w") as f:
