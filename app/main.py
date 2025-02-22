@@ -19,10 +19,8 @@ def find_in_path(param):
 
 def main():
     while True:
-        sys.stdout.write("$ ")
-        sys.stdout.flush()
         try:
-            command = input().strip()
+            command = input("$ ").strip()
         except EOFError:
             break
 
@@ -126,8 +124,8 @@ def main():
                     print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
             else:
                 print(message, file=sys.stderr)
-            sys.stdout.write("$ ")
-            sys.stdout.flush()
+            # sys.stdout.write("$ ")
+            # sys.stdout.flush()
         match cmd:
             case "exit":
                 if args == ["0"]:
