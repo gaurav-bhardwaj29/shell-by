@@ -22,7 +22,7 @@ def main():
         sys.stdout.flush()
         
         try:
-            command_line = input.strip()
+            command_line = input().strip()
             if not command_line:
                 continue
                 
