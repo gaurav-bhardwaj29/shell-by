@@ -3,6 +3,10 @@ import os
 import subprocess
 import shlex
 
+
+def parent_dir(filepath):
+    os.makedirs(os.path.dirname(filepath), exist_ok = True)
+    
 def find_in_path(param):
     path = os.environ['PATH']
     for directory in path.split(":"):
@@ -64,6 +68,7 @@ def main():
         def output_result(result):
             if redir_stdout:
                 try:
+                    parent_dir(redir_stdout)
                     with open(redir_stdout, "w") as f:
                         f.write(result)
                 except Exception as e:
@@ -74,6 +79,7 @@ def main():
         def output_error(message):
             if redir_stderr:
                 try:
+                    parent_dir(redir_stderr)
                     with open(redir_stderr, "w") as f:
                         f.write(message)
                 except Exception as e:
