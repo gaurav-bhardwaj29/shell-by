@@ -1,14 +1,8 @@
 import sys
 import os
 import subprocess
-import shlex
+import shlex  # for proper parsing of quoted strings
 
-
-def parent_dir(filepath):
-    parent = os.path.dirname(filepath)
-    if parent:
-        os.makedirs(parent, exist_ok = True)
-    
 def find_in_path(param):
     path = os.environ['PATH']
     for directory in path.split(":"):
@@ -16,6 +10,12 @@ def find_in_path(param):
         if os.path.isfile(executable_path) and os.access(executable_path, os.X_OK):
             return executable_path
     return None
+
+def ensure_parent_directory(filepath):
+    """Ensure that the parent directory of the given file exists."""
+    parent = os.path.dirname(filepath)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
 
 def main():
     while True:
@@ -31,6 +31,7 @@ def main():
             continue
 
         try:
+            # Use shlex.split to properly handle quotes and spaces.
             parts = shlex.split(command)
         except Exception as e:
             print(f"Error parsing command: {e}", file=sys.stderr)
@@ -39,6 +40,10 @@ def main():
         if not parts:
             continue
 
+        # Parse redirection tokens.
+        # Supported:
+        # stdout: ">" or "1>"
+        # stderr: "2>"
         redir_stdout = None
         redir_stderr = None
         command_tokens = []
@@ -67,18 +72,22 @@ def main():
             continue
 
         cmd, *args = command_tokens
+
+        # Helper functions for output and error redirection.
         def output_result(result):
             if redir_stdout:
                 try:
-                    parent_dir(redir_stdout)
+                    ensure_parent_directory(redir_stdout)
                     with open(redir_stdout, "w") as f:
                         f.write(result)
                 except Exception as e:
                     print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
             elif redir_stderr:
+                # When only stderr redirection is specified, print to terminal
+                # and also write to the stderr target.
                 print(result)
                 try:
-                    parent_dir(redir_stderr)
+                    ensure_parent_directory(redir_stderr)
                     with open(redir_stderr, "w") as f:
                         f.write(result)
                 except Exception as e:
@@ -89,7 +98,7 @@ def main():
         def output_error(message):
             if redir_stderr:
                 try:
-                    parent_dir(redir_stderr)
+                    ensure_parent_directory(redir_stderr)
                     with open(redir_stderr, "w") as f:
                         f.write(message)
                 except Exception as e:
@@ -134,6 +143,7 @@ def main():
                     continue
                 contents = []
                 for arg in args:
+                    # With shlex.split the quotes are already removed.
                     if os.path.isfile(arg):
                         try:
                             with open(arg, 'r') as f:
@@ -142,18 +152,22 @@ def main():
                             output_error(f"cat: {arg}: Error reading file: {e}")
                     else:
                         output_error(f"cat: {arg}: No such file or directory")
-                output_result("".join(contents))
+                output_result(" ".join(contents))
             case _:
+                # For external commands, check if cmd is a file or in PATH.
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
                 if executable_path:
                     stdout_file = None
                     stderr_file = None
                     try:
                         if redir_stdout:
+                            ensure_parent_directory(redir_stdout)
                             stdout_file = open(redir_stdout, "w")
                         if redir_stderr:
+                            ensure_parent_directory(redir_stderr)
                             stderr_file = open(redir_stderr, "w")
-                        subprocess.run([cmd, *args], executable=executable_path, stdout=stdout_file, stderr=stderr_file)
+                        subprocess.run([cmd, *args], executable=executable_path,
+                                       stdout=stdout_file, stderr=stderr_file)
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
                     finally:
