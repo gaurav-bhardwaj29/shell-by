@@ -5,7 +5,9 @@ import shlex
 
 
 def parent_dir(filepath):
-    os.makedirs(os.path.dirname(filepath), exist_ok = True)
+    parent = os.path.dirname(filepath)
+    if parent:
+        os.makedirs(parent, exist_ok = True)
     
 def find_in_path(param):
     path = os.environ['PATH']
@@ -73,6 +75,14 @@ def main():
                         f.write(result)
                 except Exception as e:
                     print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
+            elif redir_stderr:
+                print(result)
+                try:
+                    parent_dir(redir_stderr)
+                    with open(redir_stderr, "w") as f:
+                        f.write(result)
+                except Exception as e:
+                    print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
             else:
                 print(result)
 
