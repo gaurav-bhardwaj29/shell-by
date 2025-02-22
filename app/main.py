@@ -26,7 +26,7 @@ def main():
             if not command_line:
                 continue
                 
-            # strderr redirection (2>>)
+            # stderr redirection (2>>)
             
             if "2>>" in command_line:
                 parts = shlex.split(command_line)
@@ -54,7 +54,7 @@ def main():
                 command_args = parts[:split_index]
                 output_file = parts[split_index+1]
                 with open(output_file, "a") as f:
-                    result = subprocess.run(command_args, stdout = f, strderr = subprocess.PIPE, text = True)
+                    result = subprocess.run(command_args, stdout = f, stderr = subprocess.PIPE, text = True)
                 
                 if result.stderr:
                     sys.stderr.write(result.stderr)
@@ -67,7 +67,7 @@ def main():
                 parts = shlex.split(command_line)
                 if "2>" in parts:
                     split_index = parts.index("2>")
-                command_args = parse[:split_index]
+                command_args = parts[:split_index]
                 output_file = parts[split_index+1]
                 with open(output_file, "a") as f:
                     result = subprocess.run(command_args, stdout = subprocess.PIPE, stderr = f, text = True)
@@ -107,7 +107,8 @@ def main():
                 sys.stdout.flush()
                 
             elif command == "pwd":
-                sys.stdout.write(output + '\n')
+                sys.stdout.write(os.getcwd() + '\n')
+                sys.stdout.flush()
             elif command == "cd":
                 directory = args[1] if len(args)>1 else HOME
                 
@@ -120,7 +121,7 @@ def main():
                 except PermissionError:
                     sys.stderr.write(f"cd: {directory}: Permission denied\n")
                 except Exception as e:
-                    sys.stderr.write(f"cd: {directory}: {std(e)}\n")
+                    sys.stderr.write(f"cd: {directory}: {str(e)}\n")
                 sys.stdout.flush()
                 
             elif command == "type":
