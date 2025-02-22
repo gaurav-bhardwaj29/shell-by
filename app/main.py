@@ -34,6 +34,7 @@ def main():
                     exit(0)
             case "echo":
                 # Process arguments, preserving spaces in quoted strings
+                print(f"Debug args: {args}")
                 result = []
                 for arg in args:
                     if arg.startswith("'") and arg.endswith("'"):
@@ -45,7 +46,7 @@ def main():
                 # Join with single spaces, preserving spaces within quoted parts
                 print(" ".join(result))
             case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
+                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
                     print(f"{args[0]} is a shell builtin")
                 else:
                     location = find_in_path(args[0])
