@@ -117,7 +117,7 @@ def main():
                 try:
                     os.chdir(directory)
                 except FileNotFoundError:
-                    sys.stderr.write(f"cd: {directory}: No such file or dirctory\n")
+                    sys.stderr.write(f"cd: {directory}: No such file or directory\n")
                 except PermissionError:
                     sys.stderr.write(f"cd: {directory}: Permission denied\n")
                 except Exception as e:
