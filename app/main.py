@@ -11,24 +11,39 @@ def get_executables(prefix):
     matches=set()
     # custom executables autocompletion
     for path in os.environ["PATH"].split(os.pathsep):
-        if os.path.exists(path) and os.path.is_dir(path):
+        if os.path.isdir(path):
             for file in os.listdir(path):
                 full_path=os.path.join(path, file)
-                if file.startswith(prefix) and os.path.is_executable(full_path) and os.path.is_file(full_path):
+                if file.startswith(prefix) and os.access(full_path, os.X_OK):
                     matches.add(file)
     return sorted(matches)
 def completer(text, state):
-    begidx = readline.get_begidx()
-    endidx = readline.get_endidx()
-    current_word = text[begidx:endidx]
-    if begidx == 0 or text[:begidx].strip() == '':
-        matches = get_executables(current_word)
-        try:
-            return matches[state] + " "
-        except IndexError:
-            return None
-    else:
+    global tab_press_count, last_text
+    if text != last_text:
+        tab_press_count=0
+        last_text=text
+    matches = get_executables(text)
+    if not matches:
         return None
+        
+    if tab_press_count==0:
+        
+        if len(matches)>1:
+            tab_press_count+=1
+            sys.stdout.write("\a")
+            sys.stdout.flush()
+            return None
+        elif len(matches) == 1:
+            return matches[0] + " "
+    elif state == 0 and tab_press_count == 1:
+        if len(matches)>1:
+            print("\n"+"  ".join(matches)+"\n")
+            sys.stdout.write(f"\n$ {text}")
+            sys.stdout.flush()
+            readline.redisplay()
+            tab_press_count=0
+            return None
+    return matches[state]+ " " if state<len(matches) else None
 
 def main():
     builtin = ["echo", "exit", "pwd", "cd", "type"]
