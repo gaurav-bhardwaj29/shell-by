@@ -92,11 +92,13 @@ def main():
                 error_file = parts[split_index+1]
                 
                 with open(error_file, "a") as f:
-                    result = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=f, text = True)
+                    result = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=f, text=True)
                 if result.stdout:
                     sys.stdout.write(result.stdout)
                     sys.stdout.flush()
+                readline.set_pre_input_hook(lambda: readline.insert_text(""))
                 continue
+                
             
             # stdout redirection (>>) or (1>>)
             
@@ -220,6 +222,7 @@ def main():
                 else:
                     sys.stderr.write(f"{command}: command not found\n")
                 sys.stdout.flush()
+            readline.set_pre_input_hook(lambda=readline.insert_text(""))
                 
         except EOFError:
             sys.stdout.write("\n")
