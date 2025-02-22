@@ -39,6 +39,7 @@ def completer(text, state):
         if len(matches)>1:
             print("\n"+"  ".join(matches))
             sys.stdout.write(f"\n$ {text}")
+            readline.redisplay()
             sys.stdout.flush()
             tab_press_count=0
             return None
