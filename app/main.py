@@ -41,7 +41,7 @@ def main():
                         result.append(arg[1:-1])
                     else:
                         # Unquoted argument, add as is
-                        result.append(arg[1:-1])
+                        result.append(arg)
                 # Join with single spaces, preserving spaces within quoted parts
                 print(" ".join(result))
             case "type":
