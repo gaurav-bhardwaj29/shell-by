@@ -4,6 +4,9 @@ import shlex
 import subprocess
 import readline
 
+
+tab_press_count=0
+last_text=""
 def get_executables(prefix):
     matches=[]
     # custom executables autocompletion
@@ -13,7 +16,6 @@ def get_executables(prefix):
                 full_path=os.path.join(path, file)
                 if file.startswith(prefix) and os.access(full_path, os.X_OK):
                     matches.append(file)
-
     return sorted(matches)
 def completer(text, state):
     global tab_press_count, last_text
@@ -32,7 +34,7 @@ def completer(text, state):
     if state == 1 and tab_press_count == 1:
         if len(matches)>1:
             print("\n"+" ".join(matches))
-            sys.stdout.write(f"$ {text}")
+            sys.stdout.write(f"\n$ {text}")
             sys.stdout.flush()
             tab_press_count=0
             return None
