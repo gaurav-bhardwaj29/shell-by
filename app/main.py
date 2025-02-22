@@ -1,262 +1,182 @@
-import sys
 import os
-import subprocess
+import sys
 import shlex
+import subprocess
 import readline
 
-
-def parent_dir(filepath):
-    parent = os.path.dirname(filepath)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-
-
-def find_in_path(param):
-    path = os.environ.get('PATH', '')
-    for directory in path.split(":"):
-        executable_path = os.path.join(directory, param)
-        if os.path.isfile(executable_path) and os.access(executable_path, os.X_OK):
-            return executable_path
-    return None
-
-
-def output_error(message):
-    print(message, file=sys.stderr)
-
-
-def complete(text, state):
-    builtins = ["echo", "exit", "type", "pwd", "cd", "cat"]
+def completer(text, state):
+    builtins = ["echo", "exit"]
     matches = [cmd for cmd in builtins if cmd.startswith(text)]
-    if state < len(matches):
-        return matches[state] + " "
-    return None
-
+    return matches[state] if state<len(matches) else None
 
 def main():
-    readline.set_completer(complete)
+    builtin = ["echo", "exit", "pwd", "cd", "type"]
+    PATH = os.environ.get('PATH')
+    HOME = os.environ.get('HOME')
+    
+    readline.set_completer(completer)
     readline.parse_and_bind("tab: complete")
-
+    
     while True:
         sys.stdout.write("$ ")
         sys.stdout.flush()
+        
         try:
-            command = input().strip()
-        except EOFError:
-            break
-
-        if not command:
-            continue
-
-        try:
-            parts = shlex.split(command)
-        except Exception as e:
-            output_error(f"Error parsing command: {e}")
-            continue
-
-        if not parts:
-            continue
-
-        redir_stdout = None
-        redir_stdout_append = None
-        redir_stderr = None
-        redir_stderr_append = None
-        command_tokens = []
-        i = 0
-        while i < len(parts):
-            token = parts[i]
-            if token in (">", "1>"):
-                if i + 1 >= len(parts):
-                    output_error("Redirection operator without target file")
-                    break
-                redir_stdout = parts[i + 1]
-                i += 2
+            command_line = input.strip()
+            if not command_line:
                 continue
-            elif token in (">>", "1>>"):
-                if i + 1 >= len(parts):
-                    output_error("Redirection operator without target file")
-                    break
-                redir_stdout_append = parts[i + 1]
-                i += 2
+                
+            # strderr redirection (2>>)
+            
+            if "2>>" in command_line:
+                parts = shlex.split(command_line)
+                split_index = parts.index("2>>")
+                command_args = parts[:split_index]
+                error_file = parts[split_index+1]
+                
+                with open(error_file, "a") as f:
+                    result = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=f, text = True)
+                if result.stdout:
+                    sys.stdout.write(result.stdout)
+                    sys.stdout.flush()
                 continue
-            elif token == "2>":
-                if i + 1 >= len(parts):
-                    output_error("Redirection operator without target file")
-                    break
-                redir_stderr = parts[i + 1]
-                i += 2
+            
+            # stdout redirection (>>) or (1>>)
+            
+            if ">>" in command_line or "1>>" in command_line:
+                parts = shlex.split(command_line)
+                if ">>" in parts:
+                    split_index = parts.index(">>")
+                    
+                else:
+                    split_index = parts.index("1>>")
+                    
+                command_args = parts[:split_index]
+                output_file = parts[split_index+1]
+                with open(output_file, "a") as f:
+                    result = subprocess.run(command_args, stdout = f, strderr = subprocess.PIPE, text = True)
+                
+                if result.stderr:
+                    sys.stderr.write(result.stderr)
+                    sys.stdout.flush()
                 continue
-            elif token == "2>>":
-                if i + 1 >= len(parts):
-                    output_error("Redirection operator without target file")
-                    break
-                redir_stderr_append = parts[i + 1]
-                i += 2
+                
+            # stderr redirection (2>)
+            
+            if "2>" in command_line:
+                parts = shlex.split(command_line)
+                if "2>" in parts:
+                    split_index = parts.index("2>")
+                command_args = parse[:split_index]
+                output_file = parts[split_index+1]
+                with open(output_file, "a") as f:
+                    result = subprocess.run(command_args, stdout = subprocess.PIPE, stderr = f, text = True)
+                    
+                if result.stdout:
+                    sys.stdout.write(result.stdout)
+                    sys.stdout.flush()
                 continue
+                
+            # stdout redirection (1>) or (>)
+            
+            if ">" in command_line or "1>" in command_line:
+                parts = shlex.split(command_line)
+                if ">" in parts:
+                    split_index = parts.index(">")
+                else:
+                    split_index = parts.index("1>")
+                    
+                command_args = parts[:split_index]
+                output_file = parts[split_index+1]
+                
+                with open(output_file, "w") as f:
+                    result = subprocess.run(command_args, stdout=f, stderr=subprocess.PIPE, text = True
+                                            )
+                if result.stderr:
+                    sys.stderr.write(result.stderr)
+                    sys.stderr.flush()
+                continue
+            args = shlex.split(command_line)
+            command = args[0]
+            
+            if command == "exit":
+                sys.exit(0)
+            elif command == "echo":
+                output = " ".join(args[1:])
+                sys.stdout.write(output + '\n')
+                sys.stdout.flush()
+                
+            elif command == "pwd":
+                sys.stdout.write(output + '\n')
+            elif command == "cd":
+                directory = args[1] if len(args)>1 else HOME
+                
+                if directory == '~':
+                    directory = HOME
+                try:
+                    os.chdir(directory)
+                except FileNotFoundError:
+                    sys.stderr.write(f"cd: {directory}: No such file or dirctory\n")
+                except PermissionError:
+                    sys.stderr.write(f"cd: {directory}: Permission denied\n")
+                except Exception as e:
+                    sys.stderr.write(f"cd: {directory}: {std(e)}\n")
+                sys.stdout.flush()
+                
+            elif command = "type":
+                if len(args) <2:
+                    sys.stderr.write("type: missing argument\n")
+                else:
+                    new_command = args[1]
+                    cmd_path = None
+                    
+                    for path in PATH.split(os.pathsep):
+                        full_path = os.path.join(path, new_command)
+                        if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                            cmd_path = full_path
+                            break
+                    if new_command in builtin:
+                        sys.stdout.write(f"{new commnad} is a shell builtin\n")
+                    elif cmd_path:
+                        sys.stdout.write(f"{new comannd} is {cmd_path}\n")
+                    else:
+                        sys.stderr.write(f"{new command}: not found\n")
+                sys.stdout.flush()
+            
+            # Handle external commands
             else:
-                command_tokens.append(token)
-                i += 1
-
-        if not command_tokens:
-            continue
-
-        cmd, *args = command_tokens
-
-        match cmd:
-            case "exit":
-                if args == ["0"]:
-                    sys.exit(0)
-            case "echo":
-                result = " ".join(args)
-                try:
-                    if redir_stdout_append:
-                        parent_dir(redir_stdout_append)
-                        with open(redir_stdout_append, "a") as f:
-                            f.write(result + "\n")
-                    elif redir_stdout:
-                        parent_dir(redir_stdout)
-                        with open(redir_stdout, "w") as f:
-                            f.write(result + "\n")
-                    else:
-                        print(result)
-                except Exception as e:
-                    output_error(f"Error handling output: {e}")
-            case "type":
-                if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd", "cat"}:
-                    result = f"{args[0]} is a shell builtin"
+                cmd_path = None
+                for path in PATH.split(os.pathsep):
+                    full_path = os.path.join(path, command)
+                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                        cmd_path = full_path
+                        break
+                if cmd_path:
                     try:
-                        if redir_stdout_append:
-                            parent_dir(redir_stdout_append)
-                            with open(redir_stdout_append, "a") as f:
-                                f.write(result + "\n")
-                        elif redir_stdout:
-                            parent_dir(redir_stdout)
-                            with open(redir_stdout, "w") as f:
-                                f.write(result + "\n")
-                        else:
-                            print(result)
+                        result = subprocess.run(args, capture_output=True, text=True)
+                        
+                        sys.stdout.write(result.stdout)
+                        sys.stderr.write(result.stderr)
                     except Exception as e:
-                        output_error(f"Error handling output: {e}")
+                        sys.stderr.write(f"Error executing command: {e}\n")
                 else:
-                    location = find_in_path(args[0])
-                    if location:
-                        result = f"{args[0]} is {location}"
-                        try:
-                            if redir_stdout_append:
-                                parent_dir(redir_stdout_append)
-                                with open(redir_stdout_append, "a") as f:
-                                    f.write(result + "\n")
-                            elif redir_stdout:
-                                parent_dir(redir_stdout)
-                                with open(redir_stdout, "w") as f:
-                                    f.write(result + "\n")
-                            else:
-                                print(result)
-                        except Exception as e:
-                            output_error(f"Error handling output: {e}")
-                    else:
-                        output_error(f"{' '.join(args)} not found")
-            case "pwd":
-                result = os.getcwd()
-                try:
-                    if redir_stdout_append:
-                        parent_dir(redir_stdout_append)
-                        with open(redir_stdout_append, "a") as f:
-                            f.write(result + "\n")
-                    elif redir_stdout:
-                        parent_dir(redir_stdout)
-                        with open(redir_stdout, "w") as f:
-                            f.write(result + "\n")
-                    else:
-                        print(result)
-                except Exception as e:
-                    output_error(f"Error handling output: {e}")
-            case "cd":
-                if not args:
-                    continue
-                target = os.path.abspath(os.path.expanduser(args[0]))
-                if os.path.isdir(target):
-                    try:
-                        os.chdir(target)
-                    except Exception as e:
-                        output_error(f"cd: {args[0]}: No such file or directory")
-                else:
-                    output_error(f"cd: {args[0]}: No such file or directory")
-            case "cat":
-                if not args:
-                    continue
-                contents = []
-                for arg in args:
-                    if os.path.isfile(arg):
-                        try:
-                            with open(arg, 'r') as f:
-                                contents.append(f.read().strip())
-                        except Exception as e:
-                            output_error(f"cat: {arg}: Error reading file: {e}")
-                    else:
-                        output_error(f"cat: {arg}: No such file or directory")
-                result = "".join(contents)
-                try:
-                    if redir_stdout_append:
-                        parent_dir(redir_stdout_append)
-                        with open(redir_stdout_append, "a") as f:
-                            f.write(result)
-                    elif redir_stdout:
-                        parent_dir(redir_stdout)
-                        with open(redir_stdout, "w") as f:
-                            f.write(result)
-                    else:
-                        sys.stdout.write(result)
-                        sys.stdout.flush()
-                except Exception as e:
-                    output_error(f"Error handling output: {e}")
-            case _:
-                executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
-                if executable_path:
-                    try:
-                        result = subprocess.run(
-                            [cmd, *args],
-                            executable=executable_path,
-                            stdout=subprocess.PIPE,  # Always capture stdout
-                            stderr=subprocess.PIPE,  # Always capture stderr
-                            text=True
-                        )
-                        try:
-                            # Handle stdout redirection
-                            if redir_stdout_append:
-                                parent_dir(redir_stdout_append)
-                                with open(redir_stdout_append, "a") as f:
-                                    if result.stdout:
-                                        f.write(result.stdout)
-                            elif redir_stdout:
-                                parent_dir(redir_stdout)
-                                with open(redir_stdout, "w") as f:
-                                    if result.stdout:
-                                        f.write(result.stdout)
-                            elif result.stdout:
-                                sys.stdout.write(result.stdout)
-                                sys.stdout.flush()
-
-                            # Handle stderr redirection
-                            if redir_stderr_append:
-                                parent_dir(redir_stderr_append)
-                                with open(redir_stderr_append, "a") as f:
-                                    if result.stderr:
-                                        f.write(result.stderr)
-                            elif redir_stderr:
-                                parent_dir(redir_stderr)
-                                with open(redir_stderr, "w") as f:
-                                    if result.stderr:
-                                        f.write(result.stderr)
-                            elif result.stderr:
-                                sys.stderr.write(result.stderr.rstrip('\n') + '\n')
-                                sys.stderr.flush()
-                        except Exception as e:
-                            output_error(f"Failed to handle output redirection: {e}")
-                    except Exception as e:
-                        output_error(f"Failed to execute {cmd}: {e}")
-                else:
-                    output_error(f"{cmd}: command not found")
-
-
+                    sys.stderr.write(f"{command}: command not found\n")
+                sys.stdout.flush()
+                
+        except EOFError:
+            sys.stdout.write("\n")
+            break
+            
+        except Exception as e:
+            sys.stderr.write(f"Error: {e}\n")
+            sys.stdout.flush()
+            
+            
 if __name__ == "__main__":
     main()
+    
+                        
+                            
+            
+                
+                
