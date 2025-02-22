@@ -175,30 +175,44 @@ def main():
             case _:
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
                 if executable_path:
-                    stdout_file = None
-                    stderr_file = None
                     try:
-                        if redir_stdout_append:
-                            parent_dir(redir_stdout_append)
-                            stdout_file = open(redir_stdout_append, "a")
-                        elif redir_stdout:
-                            parent_dir(redir_stdout)
-                            stdout_file = open(redir_stdout, "w")
-                        if redir_stderr_append:
-                            parent_dir(redir_stderr_append)
-                            stderr_file = open(redir_stderr_append, "a")
-                        elif redir_stderr:
-                            parent_dir(redir_stderr)
-                            stderr_file = open(redir_stderr, "w")
+                        # Capture output instead of passing file objects
+                        result = subprocess.run(
+                            [cmd, *args],
+                            executable=executable_path,
+                            stdout=subprocess.PIPE if redir_stdout or redir_stdout_append else None,
+                            stderr=subprocess.PIPE if redir_stderr or redir_stderr_append else None,
+                            text=True
+                        )
 
-                        subprocess.run([cmd, *args], executable=executable_path, stdout=stdout_file, stderr=stderr_file)
+                        # Handle stdout redirection
+                        if redir_stdout_append and result.stdout:
+                            parent_dir(redir_stdout_append)
+                            with open(redir_stdout_append, "a") as f:
+                                f.write(result.stdout)
+                        elif redir_stdout and result.stdout:
+                            parent_dir(redir_stdout)
+                            with open(redir_stdout, "w") as f:
+                                f.write(result.stdout)
+                        elif result.stdout:
+                            sys.stdout.write(result.stdout)
+                            sys.stdout.flush()
+
+                        # Handle stderr redirection
+                        if redir_stderr_append and result.stderr:
+                            parent_dir(redir_stderr_append)
+                            with open(redir_stderr_append, "a") as f:
+                                f.write(result.stderr)
+                        elif redir_stderr and result.stderr:
+                            parent_dir(redir_stderr)
+                            with open(redir_stderr, "w") as f:
+                                f.write(result.stderr)
+                        elif result.stderr:
+                            sys.stderr.write(result.stderr)
+                            sys.stderr.flush()
+
                     except Exception as e:
                         output_error(f"Failed to execute {cmd}: {e}")
-                    finally:
-                        if stdout_file is not None:
-                            stdout_file.close()
-                        if stderr_file is not None:
-                            stderr_file.close()
                 else:
                     output_error(f"{cmd}: command not found")
         if (redir_stderr or redir_stderr_append) and not os.path.exists(redir_stderr or redir_stderr_append):
