@@ -215,14 +215,20 @@ def main():
                         output_error(f"Failed to execute {cmd}: {e}")
                 else:
                     output_error(f"{cmd}: command not found")
-        if (redir_stderr or redir_stderr_append) and not os.path.exists(redir_stderr or redir_stderr_append):
-            target = redir_stderr if redir_stderr else redir_stderr_append
+        if redir_stderr and not os.path.exists(redir_stderr):
             try:
-                parent_dir(target)
-                with open(target, "w") as f:
+                parent_dir(redir_stderr)
+                with open(redir_stderr, "w") as f:
                     f.write("")
             except Exception as e:
-                print(f"Error creating {target}: {e}", file=sys.stderr)
+                print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
+        elif redir_stderr_append and not os.path.exists(redir_stderr_append):
+            try:
+                parent_dir(redir_stderr_append)
+                with open(redir_stderr_append, "a") as f:  # Use "a" for append
+                    f.write("")
+            except Exception as e:
+                print(f"Error creating {redir_stderr_append}: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":
