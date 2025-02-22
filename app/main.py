@@ -7,7 +7,14 @@ import readline
 def completer(text, state):
     builtins = ["echo ", "exit "]
     matches = [cmd for cmd in builtins if cmd.startswith(text)]
-    return matches[state] if state<len(matches) else None
+    # custom executables autocompletion
+    for path in os.environ["PATH"].split(os.pathsep):
+        if os.path.isdir(path):
+            for file in os.listdir(path):
+                if file.startswith(text) and os.access(os.path.join(path, file), os.X_OK):
+                    matches.append(file)
+
+    return matches[state] if state < len(matches) else None
 
 def main():
     builtin = ["echo", "exit", "pwd", "cd", "type"]
