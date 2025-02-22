@@ -1,7 +1,7 @@
 import sys
 import os
 import subprocess
-
+import shlex
 
 def find_in_path(param):
     path = os.environ['PATH']
@@ -17,12 +17,19 @@ def main():
         sys.stdout.write("$ ")
         sys.stdout.flush()
 
-        command = input().strip()
+        try:
+            command = input().strip()
+        except EOFError:
+            break
 
         if not command:
             continue
 
-        parts = command.split()
+        try:
+            parts = shlex.split(command)
+        except Exception as e:
+            print("Error parsing command: {e}")
+            continue
         if not parts:
             continue
 
@@ -33,18 +40,7 @@ def main():
                 if args == ["0"]:
                     exit(0)
             case "echo":
-                # Process arguments, preserving spaces in quoted strings
-                # print(f"Debug args: {args}")
-                result = []
-                for arg in args:
-                    if arg.startswith("'") and arg.endswith("'"):
-                        # Remove quotes and preserve literal content
-                        result.append(arg[1:-1])
-                    else:
-                        # Unquoted argument, add as is
-                        result.append(arg)
-                # Join with single spaces, preserving spaces within quoted parts
-                print(" ".join(result))
+                print(" ".join(args))
             case "type":
                 if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
                     print(f"{args[0]} is a shell builtin")
@@ -73,7 +69,7 @@ def main():
                 try:
                     contents = []
                     for arg in args:
-                        file = arg[1:-1] if arg.startswith("'") and arg.endswith("'") else arg
+                        file = arg
                         if os.path.isfile(file):
                             with open(file, 'r') as f:
                                 contents.append(f.read().strip())
