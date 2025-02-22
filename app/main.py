@@ -85,7 +85,7 @@ def main():
         def output_result(result):
             if redir_stdout_append:
                 if os.path.exists(redir_stdout_append):
-                    continue
+                    print(result)
                 else:
                     try:
                         parent_dir(redir_stdout_append)
