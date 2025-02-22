@@ -33,12 +33,12 @@ def completer(text, state):
             return matches[0] + " "
     if state == 1 and tab_press_count == 1:
         if len(matches)>1:
-            print("\n"+"  ".join(matches))
+            print("\n"+" ".join(matches))
             sys.stdout.write(f"\n$ {text}")
             sys.stdout.flush()
             tab_press_count=0
             return None
-        return matches[state]+ " " if state<len(matches) else None
+    return matches[state]+ " " if state<len(matches) else None
 
 def main():
     builtin = ["echo", "exit", "pwd", "cd", "type"]
