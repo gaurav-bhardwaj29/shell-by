@@ -52,6 +52,13 @@ def main():
                 redir_stdout = parts[i+1]
                 i += 2
                 continue
+            elif token in (">>", "1>>"):
+                if i + 1 >= len(parts):
+                    print("Redirection operator without target file", file=sys.stderr)
+                    break
+                redir_stdout_append = parts[i+1]
+                i += 2
+                continue
             elif token == "2>":
                 if i + 1 >= len(parts):
                     print("Redirection operator without target file", file=sys.stderr)
@@ -75,7 +82,15 @@ def main():
 
         cmd, *args = command_tokens
         def output_result(result):
-            if redir_stdout:
+            if redir_stdout_append:
+                try:
+                    parent_dir(redir_stdout_append)
+                    with open(redir_stdout_append, "a") as f:
+                        f.write(result)
+                except Exception as e:
+                    print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
+
+            elif redir_stdout:
                 try:
                     parent_dir(redir_stdout)
                     with open(redir_stdout, "w") as f:
@@ -148,7 +163,10 @@ def main():
                     stdout_file = None
                     stderr_file = None
                     try:
-                        if redir_stdout:
+                        if redir_stdout_append:
+                            parent_dir(redir_stdout_append)
+                            stdout_file = open(redir_stdout_append, "a")
+                        elif redir_stdout:
                             parent_dir(redir_stdout)
                             stdout_file = open(redir_stdout, "w")
                         if redir_stderr:
