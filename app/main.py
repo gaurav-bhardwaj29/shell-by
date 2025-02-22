@@ -111,11 +111,18 @@ def main():
                 print(result)
 
         def output_error(message):
-            if redir_stderr:
+            if redir_stderr_append:
                 try:
-                    parent_dir(redir_stderr)
+                    parent_dir(redir_stderr_append)
+                    with open(redir_stderr_append, "a") as f:
+                        f.write(message+"\n")
+                except Exception as e:
+                    print(f"Error writing to {redir_stderr_append}: {e}", file=sys.stderr)
+            elif redir_stderr:
+                try:
+                    ensure_parent_directory(redir_stderr)
                     with open(redir_stderr, "w") as f:
-                        f.write(message)
+                        f.write(message + "\n")
                 except Exception as e:
                     print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
             else:
