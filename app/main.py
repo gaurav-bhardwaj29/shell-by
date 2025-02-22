@@ -7,15 +7,21 @@ import shlex
 def parent_dir(filepath):
     parent = os.path.dirname(filepath)
     if parent:
-        os.makedirs(parent, exist_ok = True)
-    
+        os.makedirs(parent, exist_ok=True)
+
+
 def find_in_path(param):
-    path = os.environ['PATH']
+    path = os.environ.get('PATH', '')
     for directory in path.split(":"):
         executable_path = os.path.join(directory, param)
         if os.path.isfile(executable_path) and os.access(executable_path, os.X_OK):
             return executable_path
     return None
+
+
+def output_error(message):
+    print(message, file=sys.stderr)
+
 
 def main():
     while True:
@@ -32,7 +38,7 @@ def main():
         try:
             parts = shlex.split(command)
         except Exception as e:
-            print(f"Error parsing command: {e}", file=sys.stderr)
+            output_error(f"Error parsing command: {e}")
             continue
 
         if not parts:
@@ -48,30 +54,30 @@ def main():
             token = parts[i]
             if token in (">", "1>"):
                 if i + 1 >= len(parts):
-                    print("Redirection operator without target file", file=sys.stderr)
+                    output_error("Redirection operator without target file")
                     break
-                redir_stdout = parts[i+1]
+                redir_stdout = parts[i + 1]
                 i += 2
                 continue
             elif token in (">>", "1>>"):
                 if i + 1 >= len(parts):
-                    print("Redirection operator without target file", file=sys.stderr)
+                    output_error("Redirection operator without target file")
                     break
-                redir_stdout_append = parts[i+1]
+                redir_stdout_append = parts[i + 1]
                 i += 2
                 continue
             elif token == "2>":
                 if i + 1 >= len(parts):
-                    print("Redirection operator without target file", file=sys.stderr)
+                    output_error("Redirection operator without target file")
                     break
-                redir_stderr = parts[i+1]
+                redir_stderr = parts[i + 1]
                 i += 2
                 continue
             elif token == "2>>":
                 if i + 1 >= len(parts):
-                    print("Redirection operator without target file", file=sys.stderr)
+                    output_error("Redirection operator without target file")
                     break
-                redir_stderr_append = parts[i+1]
+                redir_stderr_append = parts[i + 1]
                 i += 2
                 continue
             else:
@@ -79,74 +85,79 @@ def main():
                 i += 1
 
         if not command_tokens:
-            if redir_stderr or redir_stderr_append:
-                target = redir_stderr if redir_stderr else redir_stderr_append
-                try:
-                    parent_dir(target)
-                    with open(target, "w") as f:
-                        f.write("")
-                except Exception as e:
-                    print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
             continue
 
         cmd, *args = command_tokens
-        def output_result(result):
-            if redir_stdout_append:
-                try:
-                    parent_dir(redir_stdout_append)
-                    with open(redir_stdout_append, "a") as f:
-                        f.write(result+"\n")
-                except Exception as e:
-                    print(f"Error appending to {redir_stdout_append}: {e}", file=sys.stderr)
 
-            elif redir_stdout:
-                try:
-                    parent_dir(redir_stdout)
-                    with open(redir_stdout, "w") as f:
-                        f.write(result+"\n")
-                except Exception as e:
-                    print(f"Error writing to {redir_stdout}: {e}", file=sys.stderr)
-            else:
-                print(result)
-
-        def output_error(message):
-            if redir_stderr_append:
-                try:
-                    parent_dir(redir_stderr_append)
-                    with open(redir_stderr_append, "a") as f:
-                        f.write(message + "\n")
-                except Exception as e:
-                    print(f"Error appending to {redir_stderr_append}: {e}", file=sys.stderr)
-            elif redir_stderr:
-                try:
-                    parent_dir(redir_stderr)
-                    with open(redir_stderr, "w") as f:
-                        f.write(message + "\n")
-                except Exception as e:
-                    print(f"Error writing to {redir_stderr}: {e}", file=sys.stderr)
-            else:
-                print(message, file=sys.stderr)
         match cmd:
             case "exit":
                 if args == ["0"]:
-                    exit(0)
+                    sys.exit(0)
             case "echo":
                 result = " ".join(args)
-                output_result(result)
+                try:
+                    if redir_stdout_append:
+                        parent_dir(redir_stdout_append)
+                        with open(redir_stdout_append, "a") as f:
+                            f.write(result + "\n")
+                    elif redir_stdout:
+                        parent_dir(redir_stdout)
+                        with open(redir_stdout, "w") as f:
+                            f.write(result + "\n")
+                    else:
+                        print(result)
+                except Exception as e:
+                    output_error(f"Error handling output: {e}")
             case "type":
                 if len(args) == 1 and args[0] in {"echo", "exit", "type", "pwd", "cd"}:
                     result = f"{args[0]} is a shell builtin"
-                    output_result(result)
+                    try:
+                        if redir_stdout_append:
+                            parent_dir(redir_stdout_append)
+                            with open(redir_stdout_append, "a") as f:
+                                f.write(result + "\n")
+                        elif redir_stdout:
+                            parent_dir(redir_stdout)
+                            with open(redir_stdout, "w") as f:
+                                f.write(result + "\n")
+                        else:
+                            print(result)
+                    except Exception as e:
+                        output_error(f"Error handling output: {e}")
                 else:
                     location = find_in_path(args[0])
                     if location:
                         result = f"{args[0]} is {location}"
-                        output_result(result)
+                        try:
+                            if redir_stdout_append:
+                                parent_dir(redir_stdout_append)
+                                with open(redir_stdout_append, "a") as f:
+                                    f.write(result + "\n")
+                            elif redir_stdout:
+                                parent_dir(redir_stdout)
+                                with open(redir_stdout, "w") as f:
+                                    f.write(result + "\n")
+                            else:
+                                print(result)
+                        except Exception as e:
+                            output_error(f"Error handling output: {e}")
                     else:
                         output_error(f"{' '.join(args)} not found")
             case "pwd":
                 result = os.getcwd()
-                output_result(result)
+                try:
+                    if redir_stdout_append:
+                        parent_dir(redir_stdout_append)
+                        with open(redir_stdout_append, "a") as f:
+                            f.write(result + "\n")
+                    elif redir_stdout:
+                        parent_dir(redir_stdout)
+                        with open(redir_stdout, "w") as f:
+                            f.write(result + "\n")
+                    else:
+                        print(result)
+                except Exception as e:
+                    output_error(f"Error handling output: {e}")
             case "cd":
                 if not args:
                     continue
@@ -171,7 +182,21 @@ def main():
                             output_error(f"cat: {arg}: Error reading file: {e}")
                     else:
                         output_error(f"cat: {arg}: No such file or directory")
-                output_result("".join(contents))
+                result = "".join(contents)
+                try:
+                    if redir_stdout_append:
+                        parent_dir(redir_stdout_append)
+                        with open(redir_stdout_append, "a") as f:
+                            f.write(result)
+                    elif redir_stdout:
+                        parent_dir(redir_stdout)
+                        with open(redir_stdout, "w") as f:
+                            f.write(result)
+                    else:
+                        sys.stdout.write(result)
+                        sys.stdout.flush()
+                except Exception as e:
+                    output_error(f"Error handling output: {e}")
             case _:
                 executable_path = cmd if os.path.isfile(cmd) else find_in_path(cmd)
                 if executable_path:
@@ -190,10 +215,11 @@ def main():
                                 with open(redir_stdout_append, "a") as f:
                                     if result.stdout:
                                         f.write(result.stdout)
-                            elif redir_stdout and result.stdout:
+                            elif redir_stdout:
                                 parent_dir(redir_stdout)
                                 with open(redir_stdout, "w") as f:
-                                    f.write(result.stdout)
+                                    if result.stdout:
+                                        f.write(result.stdout)
                             elif result.stdout:
                                 sys.stdout.write(result.stdout)
                                 sys.stdout.flush()
@@ -204,10 +230,11 @@ def main():
                                 with open(redir_stderr_append, "a") as f:
                                     if result.stderr:
                                         f.write(result.stderr)
-                            elif redir_stderr and result.stderr:
+                            elif redir_stderr:
                                 parent_dir(redir_stderr)
                                 with open(redir_stderr, "w") as f:
-                                    f.write(result.stderr)
+                                    if result.stderr:
+                                        f.write(result.stderr)
                             elif result.stderr:
                                 sys.stderr.write(result.stderr)
                                 sys.stderr.flush()
@@ -217,20 +244,6 @@ def main():
                         output_error(f"Failed to execute {cmd}: {e}")
                 else:
                     output_error(f"{cmd}: command not found")
-                    if redir_stderr and not os.path.exists(redir_stderr):
-                        try:
-                            parent_dir(redir_stderr)
-                            with open(redir_stderr, "w") as f:
-                                f.write("")
-                        except Exception as e:
-                            print(f"Error creating {redir_stderr}: {e}", file=sys.stderr)
-        elif redir_stderr_append and not os.path.exists(redir_stderr_append):
-            try:
-                parent_dir(redir_stderr_append)
-                with open(redir_stderr_append, "a") as f:  # Use "a" for append
-                    f.write("")
-            except Exception as e:
-                print(f"Error creating {redir_stderr_append}: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":
