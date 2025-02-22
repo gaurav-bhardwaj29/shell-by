@@ -223,7 +223,6 @@ def main():
                             text=True
                         )
                         try:
-                            # Handle stdout redirection
                             if redir_stdout_append:
                                 parent_dir(redir_stdout_append)
                                 with open(redir_stdout_append, "a") as f:
@@ -238,7 +237,6 @@ def main():
                                 sys.stdout.write(result.stdout)
                                 sys.stdout.flush()
 
-                            # Handle stderr redirection
                             if redir_stderr_append:
                                 parent_dir(redir_stderr_append)
                                 with open(redir_stderr_append, "a") as f:
@@ -250,7 +248,7 @@ def main():
                                     if result.stderr:
                                         f.write(result.stderr)
                             elif result.stderr:
-                                sys.stderr.write(result.stderr.rstrip('\n') + '\n')  # Ensure clean stderr output
+                                sys.stderr.write(result.stderr.rstrip("\n") + "\n")
                                 sys.stderr.flush()
                         except Exception as e:
                             output_error(f"Failed to handle output redirection: {e}")
