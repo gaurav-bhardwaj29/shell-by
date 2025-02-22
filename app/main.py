@@ -72,7 +72,7 @@ def main():
                         file = arg
                         if os.path.isfile(file):
                             with open(file, 'r') as f:
-                                contents.append(f.read().strip())
+                                contents.append(f.read())
                         else:
                             print(f"cat: {arg}: No such file or directory")
                             break
