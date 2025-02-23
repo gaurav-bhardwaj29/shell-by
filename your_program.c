@@ -7,15 +7,19 @@
 #include <dirent.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <ctype.h>
 
 #define MAX_PATH 4096
 #define MAX_COMMAND 1024
 #define MAX_ARGS 64
 #define MAX_MATCHES 256
 
+
+void execute_help();
+
 static int tab_press_count = 0;
 static char last_text[MAX_COMMAND] = "";
-static char *builtin[] = {"echo", "exit", "pwd", "cd", "type", NULL};
+static char *builtin[] = {"echo", "exit", "pwd", "cd", "type", "help", NULL};
 
 static char **custom_completion(const char *, int, int);
 static char *completion_generator(const char *, int);
@@ -150,6 +154,9 @@ void initialize_readline() {
 int execute_builtin(char **args) {
     if (strcmp(args[0], "exit") == 0) {
         exit(0);
+    } else if (strcmp(args[0], "help") == 0) {
+        execute_help();
+        return 0;
     } else if (strcmp(args[0], "echo") == 0) {
         for (int i = 1; args[i] != NULL; i++) {
             printf("%s%s", args[i], args[i + 1] ? " " : "");
@@ -239,9 +246,29 @@ void handle_redirection(char **args, int *argc) {
         }
     }
 }
-
+void display_banner() {
+    printf("\033[32m");  // Green color
+    printf("   _____ __         ____    __          \n");
+    printf("  / ___// /_  ___  / / /   / /_  __  __ \n");
+    printf("  \\__ \\/ __ \\/ _ \\/ / /   / __ \\/ / / / \n");
+    printf(" ___/ / / / /  __/ / /   / /_/ / /_/ /  \n");
+    printf("/____/_/ /_/\\___/_/_/   /_.___/\\__, /   \n");
+    printf("                              /____/     \n");
+    printf("Welcome to the custom shell! Type 'help' for commands.\n");
+    printf("\033[0m");  // Reset color
+}
+void execute_help() {
+    printf("Built-in commands:\n");
+    printf("  cd [dir]     - Change directory\n");
+    printf("  echo [text]  - Print text\n");
+    printf("  exit         - Exit the shell\n");
+    printf("  help         - Show this help\n");
+    printf("  pwd          - Print working directory\n");
+    printf("  type [cmd]   - Show command type/location\n");
+}
 int main() {
     initialize_readline();
+    display_banner();
     char *input;
     
     while ((input = readline("$ ")) != NULL) {
