@@ -8,6 +8,6 @@ cd, pwd, echo and more.
 -  Quoting
 -  Redirection
 -  Autocompletion
-
+-  Piping
 
 ### Note: For python implementation see app/main.py
