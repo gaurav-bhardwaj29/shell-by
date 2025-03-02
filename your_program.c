@@ -13,7 +13,7 @@
 #define MAX_COMMAND 1024
 #define MAX_ARGS 64
 #define MAX_MATCHES 256
-
+#define MAX_PIPES 10  
 
 void execute_help();
 
@@ -246,6 +246,156 @@ void handle_redirection(char **args, int *argc) {
         }
     }
 }
+
+// Function to execute a single command with input/output redirection
+void execute_command(char **args, int in_fd, int out_fd) {
+    if (in_fd != STDIN_FILENO) {
+        dup2(in_fd, STDIN_FILENO);
+        close(in_fd);
+    }
+    
+    if (out_fd != STDOUT_FILENO) {
+        dup2(out_fd, STDOUT_FILENO);
+        close(out_fd);
+    }
+    
+    for (int i = 0; builtin[i] != NULL; i++) {
+        if (strcmp(args[0], builtin[i]) == 0) {
+            execute_builtin(args);
+            exit(0);
+        }
+    }
+    
+    int argc = 0;
+    while (args[argc] != NULL) argc++;
+    handle_redirection(args, &argc);
+    
+    execvp(args[0], args);
+    fprintf(stderr, "%s: command not found\n", args[0]);
+    exit(1);
+}
+
+// Function to parse and execute piped commands
+void execute_piped_commands(char *input) {
+    int num_pipes = 0;
+    for (char *ptr = input; *ptr; ptr++) {
+        if (*ptr == '|') num_pipes++;
+    }
+    
+    if (num_pipes == 0) {
+        char *args[MAX_ARGS];
+        int argc = 0;
+        char *token = strtok(input, " \t\n");
+        
+        while (token != NULL && argc < MAX_ARGS - 1) {
+            args[argc++] = token;
+            token = strtok(NULL, " \t\n");
+        }
+        args[argc] = NULL;
+
+        if (argc > 0) {
+            int is_builtin = 0;
+            for (int i = 0; builtin[i] != NULL; i++) {
+                if (strcmp(args[0], builtin[i]) == 0) {
+                    is_builtin = 1;
+                    execute_builtin(args);
+                    break;
+                }
+            }
+
+            if (!is_builtin) {
+                pid_t pid = fork();
+                if (pid == 0) {
+                    handle_redirection(args, &argc);
+                    execvp(args[0], args);
+                    fprintf(stderr, "%s: command not found\n", args[0]);
+                    exit(1);
+                } else if (pid > 0) {
+                    wait(NULL);
+                } else {
+                    perror("fork");
+                }
+            }
+        }
+        return;
+    }
+    char *commands[MAX_PIPES + 1];
+    int cmd_count = 0;
+    
+    char *saveptr;
+    char *cmd = strtok_r(input, "|", &saveptr);
+    
+    while (cmd != NULL && cmd_count < MAX_PIPES + 1) {
+        while (*cmd && isspace((unsigned char)*cmd)) cmd++;
+        char *end = cmd + strlen(cmd) - 1;
+        while (end > cmd && isspace((unsigned char)*end)) *end-- = '\0';
+        
+        commands[cmd_count++] = cmd;
+        cmd = strtok_r(NULL, "|", &saveptr);
+    }
+
+    int pipes[MAX_PIPES][2];
+    for (int i = 0; i < num_pipes; i++) {
+        if (pipe(pipes[i]) < 0) {
+            perror("pipe");
+            return;
+        }
+    }
+    
+    pid_t pids[MAX_PIPES + 1];
+    for (int i = 0; i < cmd_count; i++) {
+        char *args[MAX_ARGS];
+        int argc = 0;
+        char *token = strtok(commands[i], " \t\n");
+        
+        while (token != NULL && argc < MAX_ARGS - 1) {
+            args[argc++] = token;
+            token = strtok(NULL, " \t\n");
+        }
+        args[argc] = NULL;
+        
+        if (argc == 0) continue;
+        
+        pids[i] = fork();
+        if (pids[i] < 0) {
+            perror("fork");
+            return;
+        } else if (pids[i] == 0) {
+            // Child process
+            
+            // Setup input redirection from previous pipe (if not first command)
+            int in_fd = STDIN_FILENO;
+            if (i > 0) {
+                in_fd = pipes[i-1][0];
+            }
+            
+            int out_fd = STDOUT_FILENO;
+            if (i < cmd_count - 1) {
+                out_fd = pipes[i][1];
+            }
+            
+            for (int j = 0; j < num_pipes; j++) {
+                if (j != i - 1 || i == 0) close(pipes[j][0]);
+                if (j != i || i == cmd_count - 1) close(pipes[j][1]);
+            }
+            
+            execute_command(args, in_fd, out_fd);
+            exit(1);
+        }
+    }
+    
+    // Parent process: close all pipe fds
+    for (int i = 0; i < num_pipes; i++) {
+        close(pipes[i][0]);
+        close(pipes[i][1]);
+    }
+    
+
+    for (int i = 0; i < cmd_count; i++) {
+        waitpid(pids[i], NULL, 0);
+    }
+}
+
 void display_banner() {
     printf("\033[32m");  // Green color
     printf("   _____ __         ____    __          \n");
@@ -257,6 +407,7 @@ void display_banner() {
     printf("Welcome to the custom shell! Type 'help' for commands.\n");
     printf("\033[0m");  // Reset color
 }
+
 void execute_help() {
     printf("Built-in commands:\n");
     printf("  cd [dir]     - Change directory\n");
@@ -265,7 +416,14 @@ void execute_help() {
     printf("  help         - Show this help\n");
     printf("  pwd          - Print working directory\n");
     printf("  type [cmd]   - Show command type/location\n");
+    printf("\nFeatures:\n");
+    printf("  |            - Pipe output from one command to another\n");
+    printf("  >            - Redirect output to a file\n");
+    printf("  >>           - Append output to a file\n");
+    printf("  2>           - Redirect error output to a file\n");
+    printf("  2>>          - Append error output to a file\n");
 }
+
 int main() {
     initialize_readline();
     display_banner();
@@ -274,42 +432,9 @@ int main() {
     while ((input = readline("$ ")) != NULL) {
         if (strlen(input) > 0) {
             add_history(input);
-            
-  
-            char *args[MAX_ARGS];
-            int argc = 0;
-            char *token = strtok(input, " \t\n");
-            
-            while (token != NULL && argc < MAX_ARGS - 1) {
-                args[argc++] = token;
-                token = strtok(NULL, " \t\n");
-            }
-            args[argc] = NULL;
-
-            if (argc > 0) {
-                int is_builtin = 0;
-                for (int i = 0; builtin[i] != NULL; i++) {
-                    if (strcmp(args[0], builtin[i]) == 0) {
-                        is_builtin = 1;
-                        execute_builtin(args);
-                        break;
-                    }
-                }
-
-                if (!is_builtin) {
-                    pid_t pid = fork();
-                    if (pid == 0) {
-                        handle_redirection(args, &argc);
-                        execvp(args[0], args);
-                        fprintf(stderr, "%s: command not found\n", args[0]);
-                        exit(1);
-                    } else if (pid > 0) {
-                        wait(NULL);
-                    } else {
-                        perror("fork");
-                    }
-                }
-            }
+            char *input_copy = strdup(input);
+            execute_piped_commands(input_copy);
+            free(input_copy);
         }
         free(input);
     }
